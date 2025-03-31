@@ -17,6 +17,11 @@ public class Deck : MonoBehaviour
 
     private void Awake()
     {
+        if (faces == null || dealer == null || player == null || hitButton == null || stickButton == null || playAgainButton == null || finalMessage == null || probMessage == null)
+        {
+            Debug.LogError("Uno o más componentes no están asignados en el inspector.");
+            return;
+        }
         InitCardValues();
     }
 
@@ -76,8 +81,40 @@ public class Deck : MonoBehaviour
 
     private void CalculateProbabilities()
     {
-        // Cálculo de probabilidades básicas (requiere análisis más profundo)
-        probMessage.text = "Probabilidades calculadas.";
+        int remainingCards = 52 - cardIndex;
+        int dealerPoints = dealer.GetComponent<CardHand>().points;
+        int playerPoints = player.GetComponent<CardHand>().points;
+
+        int countHigherThanPlayer = 0;
+        int countBetween17And21 = 0;
+        int countAbove21 = 0;
+
+        for (int i = cardIndex; i < 52; i++)
+        {
+            int newCardValue = values[i];
+            int newPlayerPoints = playerPoints + newCardValue;
+
+            if (dealerPoints > playerPoints)
+            {
+                countHigherThanPlayer++;
+            }
+            if (newPlayerPoints >= 17 && newPlayerPoints <= 21)
+            {
+                countBetween17And21++;
+            }
+            if (newPlayerPoints > 21)
+            {
+                countAbove21++;
+            }
+        }
+
+        float probHigherThanPlayer = (float)countHigherThanPlayer / remainingCards * 100;
+        float probBetween17And21 = (float)countBetween17And21 / remainingCards * 100;
+        float probAbove21 = (float)countAbove21 / remainingCards * 100;
+
+        probMessage.text = $"Prob. dealer > jugador: {probHigherThanPlayer:F2}%\n" +
+                           $"Prob. 17-21: {probBetween17And21:F2}%\n" +
+                           $"Prob. >21: {probAbove21:F2}%";
     }
 
     void PushDealer()
@@ -147,6 +184,7 @@ public class Deck : MonoBehaviour
         hitButton.interactable = true;
         stickButton.interactable = true;
         finalMessage.text = "";
+        probMessage.text = "";
         player.GetComponent<CardHand>().Clear();
         dealer.GetComponent<CardHand>().Clear();
         cardIndex = 0;
@@ -154,4 +192,3 @@ public class Deck : MonoBehaviour
         StartGame();
     }
 }
-
